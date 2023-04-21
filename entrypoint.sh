@@ -14,6 +14,7 @@ args_key="${key}"
 args_files="${files}"
 args_branches="${branches}"
 args_exclude="${exclude}"
+args_destination=${destination}
 
 if [ ! -z "${args_exclude}" ];
 then
@@ -51,6 +52,11 @@ else
   ALL_THE_FILES=('LICENSE' 'NOTICE' 'README.md' 'CONTRIBUTING.md' './vscode/settings.json' '.devcontainer/devcontainer.json' '.github/CODEOWNERS' '.github/ISSUE_TEMPLATE.MD' '.github/PULL_REQUEST_TEMPLATE.MD' '.github/workflows/main.yml')
 fi
 
+if [ ! -z "${args_destination}" ];
+then
+  DESTINATION="${args_destination}"
+fi
+
 # Loop through the array of branches and perform
 # a series of checkouts from the KEY_BRANCH 
 for CURRENT_BRANCH in ${ALL_THE_BRANCHES[@]};
@@ -75,6 +81,12 @@ for CURRENT_BRANCH in ${ALL_THE_BRANCHES[@]};
       git fetch origin
       echo "--GIT CHECKOUT -B $CURRENT_BRANCH origin/$CURRENT_BRANCH"
       git checkout -B $CURRENT_BRANCH origin/$CURRENT_BRANCH
+      if [ ! -z "${DESTINATION}" ];
+      then 
+        mkdir -p $DESTINATION
+        echo "Deleting files in $DESTINATION"
+        rm -r $DESTINATION/*
+      fi
 
       # Go through each of the files
       # Check out the selected files from the source branch
@@ -82,6 +94,12 @@ for CURRENT_BRANCH in ${ALL_THE_BRANCHES[@]};
         do
           echo "--GIT CHECKOUT origin/$KEY_BRANCH -- $CURRENT_FILE"
           git checkout origin/$KEY_BRANCH -- $CURRENT_FILE
+          if [ ! -z "${DESTINATION}" ];
+          then 
+            mkdir -p $DESTINATION
+            cp -r $CURRENT_FILE $DESTINATION
+            echo "MOVED $CURRENT_FILE to $DESTINATION"
+          fi
         done
 
       # Commit the changes
